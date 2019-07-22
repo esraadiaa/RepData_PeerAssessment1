@@ -1,0 +1,68 @@
+This is Project Assignment 1 for course "Reproducable Research"
+==============================================================
+
+
+```{r setoptions, echo=FALSE}
+library(knitr)
+opts_chunk$set(echo = TRUE)
+```
+
+
+```{r Loading the data}
+setwd("C:/Users/ESRAAD/Desktop/Reproducable Research/Week2/")
+data <- read.csv(paste0("repdata_data_activity/activity.csv"))
+```
+
+
+```{r Transform the data}
+data$date <- as.Date(as.character(data$date), origin = "1899-12-30")
+```
+
+```{r Question 1 - Mean Total Number of Steps Taken per day}
+library(stats)
+Total_Steps <- aggregate(steps ~ date, data, FUN = "sum")
+hist(Total_Steps$steps, xlab = "Steps taken per day", ylab = "Number of Days", main = "Total Number of seps taken by day")
+mean <- mean(Total_Steps$steps)
+median <- median(Total_Steps$steps)
+```
+- Mean of the number of steps taken per day is `r mean`.
+- Median of the number of steps taken per day is `r median`.
+
+
+```{r Question 2 - Average daily activity pattern}
+library(ggplot2)
+Average_Steps <- aggregate(steps ~ interval, data, FUN = "mean")
+with(Average_Steps, plot(interval, steps, type = "l", xlab = "Daily Intervals", ylab = "Average Number of Steps"))
+```
+
+
+```{r Question 3 - Imputing Missing Values}
+data1 <- data
+Missing <- is.na(data1$steps)
+NumberMissing <- sum(Missing)
+m <- mean(data1$steps, na.rm = T)
+data1$steps[Missing] <- m
+head(data1)
+Total_Steps1 <- aggregate(steps ~ date, data1, FUN = "sum")
+hist(Total_Steps1$steps, xlab = "Steps taken per day", ylab = "Number of Days", main = "Total Number of seps taken by day")
+mean1 <- mean(Total_Steps1$steps)
+median1 <- median(Total_Steps1$steps)
+```
+- Number of missing values is `r NumberMissing` which will be replaced by the mean which is `r m`.
+- Mean of the number of steps taken per day after imputing missing values is `r mean1`.
+- Median of the number of steps taken per day after imputing missing values is `r median1`.
+
+```{r Question 4 - Differences in activity patterns between weekdays and weekends}
+library(dplyr)
+library(lattice)
+data2 <- data1
+data2$DayType <- factor(c("Weekday", "Weekend"))
+Weekend <- c("Sunday", "Saturday")
+data2$DayType <- ifelse(weekdays(data2$date) %in% Weekend, "Weekend", "Weekday")
+Steps_DayType <- group_by(data2, interval, DayType)
+Average_Steps_DayType <- summarize(Steps_DayType, mean = mean(steps))
+xyplot(mean ~ interval | DayType, data = Average_Steps_DayType, layout = c(1,2), type = "l", xlab = "Daily Intervals", ylab = "Average Number of steps")
+```
+
+
+
